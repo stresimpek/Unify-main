@@ -335,6 +335,18 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     
     private func updateDrowsinessState(to newState: DrowsinessState) {
         DispatchQueue.main.async {
+            if self.statsManager?.isOnBreak == true {
+                // If the break is active, the ONLY state we want to display is .onBreak.
+                // If the UI isn't already showing .onBreak, force it to.
+                if self.drowsinessState != .onBreak {
+                    self.drowsinessState = .onBreak
+                    // We still want to log this initial change to the stats manager.
+                    self.statsManager?.logStateChange(to: .onBreak, fromBreakToggle: true)
+                }
+                // IMPORTANT: Exit the function here to prevent any other state
+                // (like .awake, .drowsy) from overwriting the .onBreak status on the UI.
+                return
+            }
             // Check if the state has actually changed to prevent redundant calls
             if self.drowsinessState == newState {
                 return
@@ -345,19 +357,25 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
             self.statsManager?.logStateChange(to: newState)
             
             // --- MODIFIED LOGIC ---
+            guard self.statsManager?.isRecording == true else {
+                // If the session hasn't started, do not show any pop-ups.
+                // Simply log the state and exit.
+                return
+            }
+            
             switch newState {
             case .distracted:
-                // If distracted, show the distraction overlay.
+                // Jika terganggu, mulai istirahat dan tampilkan overlay.
                 self.coordinator?.showDistractedOverlay()
                 
             case .eyesClosed, .yawning, .headDown:
-                // If drowsy in any way, show the "lost focus" overlay.
+                // Jika mengantuk, mulai istirahat dan tampilkan overlay.
+                print("🚨 Popup triggered. Starting break.")
+                self.statsManager?.startBreak() // ⬅️ TAMBAHKAN INI
                 self.coordinator?.showLostOverlay()
                 
             default:
-                // Intentionally left empty.
-                // We no longer automatically dismiss the overlay when the user becomes focused.
-                // Dismissal will only happen when the user clicks a button within the overlay itself.
+                // Tidak ada tindakan untuk status lain.
                 break
             }
             // --- END OF MODIFIED LOGIC ---

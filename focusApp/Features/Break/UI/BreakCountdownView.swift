@@ -43,7 +43,8 @@ struct BreakCountdownView: View {
                     Button("Stop break") {
                         countdownTimer.stop()
                         dismiss()
-                        coordinator.currentView = .home
+                        coordinator.currentView = .alertMode
+                        coordinator.closeLostOverlay()
                     }
                     .font(.title2.bold())
                     .foregroundColor(.white)
@@ -84,7 +85,8 @@ struct BreakCountdownView: View {
     }
 
     func returnToMainState() {
-        coordinator.currentView = .home // ⬅️ Ganti tampilan via state
+        coordinator.currentView = .alertMode // ⬅️ Ganti tampilan via state
+        coordinator.closeLostOverlay()
     }
 }
 

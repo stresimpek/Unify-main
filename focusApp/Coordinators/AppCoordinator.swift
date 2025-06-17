@@ -2,6 +2,8 @@ import SwiftUI
 
 class AppCoordinator: ObservableObject {
     @Published var currentView: AppPage = .home
+    
+    public var statsManager: StatsManager?
 
     var floatingToolbar: FloatingToolbarWindowController?
     var focusDistractedWindow: FocusDistractedWindowController?
@@ -95,6 +97,12 @@ class AppCoordinator: ObservableObject {
 
     func closeLostOverlay() {
         print("⚪️ Close Lost Overlay")
+        if focusLostWindow != nil {
+            // Tell this specific command to run on the main thread
+            DispatchQueue.main.async { // ⬅️ WRAP THIS
+                self.statsManager?.endBreak()
+            }
+        }
         focusLostWindow?.close()
         focusLostWindow = nil
     }

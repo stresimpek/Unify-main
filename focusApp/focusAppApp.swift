@@ -17,6 +17,7 @@ struct focusAppApp: App {
                 HomeView()
                     .environmentObject(coordinator)
                     // Note: HomeView probably doesn't need stats, but it's harmless to add.
+                    .environmentObject(statsManager)
 
             case .alertMode:
                 AlertModeView()

@@ -109,6 +109,7 @@ struct AlertModeView: View {
             cameraManager.setStatsManager(statsManager)
             cameraManager.setupSession()
             cameraManager.setCoordinator(coordinator)
+            coordinator.statsManager = statsManager
         }
         .onDisappear {
             cameraManager.stopSession()

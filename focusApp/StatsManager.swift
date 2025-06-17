@@ -95,11 +95,13 @@ class StatsManager: ObservableObject {
         sessionStartTime = nil
     }
     
-/// 🛑 Call this when a break starts.
+/// /// 🛑 Call this when a break starts.
     func startBreak() {
         guard isRecording, !isOnBreak else { return }
         print("📊 StatsManager: Starting break.")
         self.isOnBreak = true
+        // This is the key call. It uses the `fromBreakToggle` to bypass the guard
+        // inside logStateChange and forcefully logs the start of the break.
         self.logStateChange(to: .onBreak, fromBreakToggle: true)
     }
 
@@ -109,11 +111,12 @@ class StatsManager: ObservableObject {
         print("📊 StatsManager: Ending break.")
         self.isOnBreak = false
         // End the break event. The next state will be logged automatically
-        // by the CameraManager.
+        // by the first frame the CameraManager processes after the break ends.
         if let lastEvent = events.last, lastEvent.state == .onBreak {
-             events[events.count - 1].endTime = Date()
+            events[events.count - 1].endTime = Date()
         }
     }
+
 
     // Modified logStateChange to handle the isOnBreak flag
     func logStateChange(to newState: DrowsinessState, fromBreakToggle: Bool = false) {
