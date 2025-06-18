@@ -4,180 +4,148 @@ import SwiftUI
 struct SessionDetailView: View {
     // Input for the view
     let session: CompletedSession
-    
+
     // For the dismiss button
     @Environment(\.dismiss) private var dismiss
-    
-    // A computed property that calculates statistics once
-    private var stats: [StatDetail] {
-        calculateStatDetails()
-    }
-    
-    // Formatter for the main title
+    @EnvironmentObject var coordinator: AppCoordinator // Add coordinator for navigation
+
+    @State private var categoryDurations: [StatCategory: TimeInterval] = [:]
+    @State private var totalConsideredDuration: TimeInterval = 0
+    @State private var focusPercentage: Int = 0 // New state for focus percentage
+
+    // Formatter for the main title (still useful for the start time)
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         formatter.timeStyle = .short
         return formatter
     }()
-    
-    // Formatter for durations
+
+    // Formatter for durations, now consistent with SummaryView
     private static let durationFormatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
+        // Allow hours, minutes, and seconds
         formatter.allowedUnits = [.hour, .minute, .second]
         formatter.unitsStyle = .full
+        // Drop all zero components by default, but this needs careful handling for seconds
+        formatter.zeroFormattingBehavior = .dropAll
         return formatter
     }()
-    
+
+    // Formatter for percentages (re-added as it's useful for cards)
+    private static let percentageFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .percent
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
+
+    // MARK: - Properties
+    // Use the same display categories as SummaryView for consistency
+    private let displayCategories: [StatCategory] = [.focus, .drowsy, .distracted, .onBreak]
+
+    // Computed property to determine the appropriate "Great Work" message
+    private var greatWorkMessage: (text: String, emoji: String) {
+        if focusPercentage >= 75 {
+            return ("You Nailed It", "🤩")
+        } else if focusPercentage >= 50 {
+            return ("Pretty Good", "😆")
+        } else if focusPercentage >= 25 {
+            return ("You Can Do Better", "😉")
+        } else {
+            return ("Focus is Off", "😵") // Default for lower focus or if no focus recorded
+        }
+    }
+
     var body: some View {
-        VStack(spacing: 20) {
-            // MARK: - Header
-            HStack {
-                Text("Session Summary")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Spacer()
-                Button("Done") {
-                    dismiss()
-                }
-            }
-            .padding(.bottom, 10)
-            
-            // MARK: - Main Info
-            VStack(alignment: .leading, spacing: 12) {
-                Text(Self.dateFormatter.string(from: session.startTime))
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
+        ZStack(alignment: .topLeading) {
+            // Background gradient (from SummaryView)
+            LinearGradient(
+                gradient: Gradient(colors: [Color(hex: "#FAF4FD"), Color(hex: "#F1E5FF")]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                // MARK: - Header (similar to SummaryView's back button, but using dismiss)
                 HStack {
-                    Text("Total Duration:")
-                        .foregroundColor(.secondary)
-                    Text(Self.durationFormatter.string(from: session.duration) ?? "N/A")
-                        .fontWeight(.medium)
+                    Button(action: {
+                        dismiss() // Dismiss the sheet/modal
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
                     Spacer()
                 }
-            }
-            
-            Divider()
-            
-            // MARK: - Timeline Bar
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Timeline")
-                    .font(.headline)
-                
-                // The single bar composed of event segments
-                HStack(spacing: 0) {
-                    if session.duration > 0 {
-                        ForEach(session.events) { event in
-                            // Width is proportional to the event's duration
-                            let widthPercentage = event.duration / session.duration
-                            
-                            // Get the color from the state
-                            event.state.color
-                                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 20, maxHeight: 20)
-                                .frame(width: .infinity * widthPercentage)
-                                .help("\(event.state.description): \(Self.durationFormatter.string(from: event.duration) ?? "")") // Tooltip
+                .padding(.horizontal)
+                .padding(.top, 20)
+
+                Spacer() // Pushes content towards the center/bottom
+
+                // MARK: - Title and Subtitle (from SummaryView)
+                VStack(spacing: 8) {
+                    Text("\(greatWorkMessage.text) \(greatWorkMessage.emoji)")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.black)
+
+                    Text("Kamu telah bekerja selama **\(Self.durationFormatter.string(from: session.duration) ?? "N/A")**.")
+                        .font(.title3)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
+
+                // MARK: - Summary Cards (from SummaryView)
+                HStack(spacing: 20) {
+                    ForEach(displayCategories, id: \.self) { category in
+                        let duration = categoryDurations[category] ?? 0
+                        let percentage = totalConsideredDuration > 0 ? (duration / totalConsideredDuration) : 0
+
+                        if duration > 0 || category == .focus {
+                            SummaryCard(
+                                percentage: Int(percentage * 100),
+                                color: category.color,
+                                title: category.rawValue,
+                                duration: Self.durationFormatter.string(from: duration) ?? "0 menit"
+                            )
                         }
-                    } else {
-                        // Fallback for zero duration sessions
-                        Color.gray
-                           .frame(height: 20)
                     }
                 }
-                .clipShape(Capsule()) // Use Capsule for rounded ends
+                .padding(.top)
+
+                Spacer() // Pushes content towards the center/top
+
+                // MARK: - Timeline Bar (from TimelineBarView)
+                TimelineBarView(session: session)
+                    .frame(height: 170) // Use the full height of TimelineBarView
             }
+            .padding(30)
+        }
+        .navigationTitle("")
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigation) { EmptyView() }
+        }
+        .onAppear {
+            // Calculate durations and focus percentage when the view appears (from SummaryView)
+            categoryDurations = session.calculateCategoryDurations()
             
-            // MARK: - Statistics Breakdown
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Statistics")
-                    .font(.headline)
-                
-                // List of stats with percentages
-                ForEach(stats) { stat in
-                    HStack {
-                        // Color indicator
-                        Circle()
-                            .fill(stat.category.color)
-                            .frame(width: 10, height: 10)
-                        
-                        Text(stat.category.rawValue)
-                        
-                        Spacer()
-                        
-                        Text(String(format: "%.1f%%", stat.percentage * 100))
-                            .fontWeight(.semibold)
-                            .frame(width: 60, alignment: .trailing)
-                    }
-                    .padding(.vertical, 4)
-                }
+            var calculatedTotalConsideredDuration: TimeInterval = 0
+            for category in displayCategories {
+                calculatedTotalConsideredDuration += categoryDurations[category] ?? 0
             }
-            
-            Spacer()
-        }
-        .padding(30)
-        .frame(minWidth: 450, idealWidth: 500, minHeight: 400, idealHeight: 480)
-    }
-    
-    /// Helper struct to hold calculated stats for the list.
-    struct StatDetail: Identifiable {
-        let id = UUID()
-        let category: StatCategory
-        let percentage: Double
-    }
-    
-    /// Processes the session's events to calculate the total duration and percentage for each category.
-    private func calculateStatDetails() -> [StatDetail] {
-        var categoryTotals: [StatCategory: TimeInterval] = [:]
+            self.totalConsideredDuration = calculatedTotalConsideredDuration
 
-        // Sum the duration for each category
-        for event in session.events {
-            let category = mapStateToCategory(event.state)
-            categoryTotals[category, default: 0] += event.duration
-        }
-
-        // Calculate total duration, ensuring it's not zero to avoid division errors
-        let totalDuration = session.duration
-        guard totalDuration > 0 else { return [] }
-
-        // Convert the totals into StatDetail models with percentages
-        return categoryTotals
-            .map { category, duration in
-                StatDetail(category: category, percentage: duration / totalDuration)
+            let focusDuration = categoryDurations[.focus] ?? 0
+            if totalConsideredDuration > 0 {
+                self.focusPercentage = Int((focusDuration / totalConsideredDuration) * 100)
+            } else {
+                self.focusPercentage = 0
             }
-            .filter { $0.percentage > 0.001 } // Filter out negligible stats
-            .sorted { $0.percentage > $1.percentage } // Sort from highest to lowest
-    }
-    
-    /// Maps a detailed DrowsinessState to a broader StatCategory.
-    private func mapStateToCategory(_ state: DrowsinessState) -> StatCategory {
-        switch state {
-        case .awake:
-            return .focus
-        case .eyesClosed, .yawning, .headDown:
-            return .drowsy
-        case .distracted(let type):
-            return type == .phoneDetected ? .phoneDistracted : .distracted
-        case .noFaceDetected, .error:
-            return .noFace
-        case .onBreak:
-            return .onBreak
         }
     }
-}
-
-#Preview {
-    // Create some dummy data for the preview
-    let dummySession = CompletedSession(
-        id: UUID(),
-        startTime: Date().addingTimeInterval(-3600), // 1 hour ago
-        endTime: Date(),
-        events: [
-            StateEvent(id: UUID(), state: .awake, startTime: Date().addingTimeInterval(-3600), endTime: Date().addingTimeInterval(-1800)), // 30 min focus
-            StateEvent(id: UUID(), state: .yawning, startTime: Date().addingTimeInterval(-1800), endTime: Date().addingTimeInterval(-900)), // 15 min drowsy
-            StateEvent(id: UUID(), state: .distracted(.faceTurned), startTime: Date().addingTimeInterval(-900), endTime: Date().addingTimeInterval(-600)), // 5 min distracted
-            StateEvent(id: UUID(), state: .awake, startTime: Date().addingTimeInterval(-600), endTime: Date()) // 10 min focus
-        ]
-    )
-    
-    return SessionDetailView(session: dummySession)
 }

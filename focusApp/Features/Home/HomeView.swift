@@ -95,12 +95,6 @@ struct HomeView: View {
     }
 }
 
-#Preview {
-    HomeView()
-        .environmentObject(AppCoordinator())
-        .frame(width: 800, height: 600)
-}
-
 
 //import SwiftUI
 //

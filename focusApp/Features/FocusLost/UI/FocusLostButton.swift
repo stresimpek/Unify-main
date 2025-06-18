@@ -1,12 +1,20 @@
 import SwiftUI
 
 struct FocusLostButtons: View {
+    // 1. Declare StatsManager as an EnvironmentObject
+    @EnvironmentObject var statsManager: StatsManager
+
     var onBreakTapped: () -> Void
     var onFocusTapped: () -> Void
 
     var body: some View {
         HStack(spacing: 20) {
-            Button(action: onBreakTapped) {
+            Button(action: {
+                // 2. Call the passed-in action
+                onBreakTapped()
+                // 3. Call the statsManager method
+//                statsManager.startBreak()
+            }) {
                 Text("break")
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -19,7 +27,10 @@ struct FocusLostButtons: View {
             }
             .buttonStyle(PlainButtonStyle())
 
-            Button(action: onFocusTapped) {
+            Button(action: {
+                // 4. Call the passed-in action
+                onFocusTapped()
+            }) {
                 Text("Kembali fokus")
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -34,4 +45,3 @@ struct FocusLostButtons: View {
         }
     }
 }
-

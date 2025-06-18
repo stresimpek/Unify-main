@@ -3,37 +3,73 @@ import SwiftUI
 struct TimelineSegment: Identifiable {
     let id = UUID()
     let type: SegmentType
-    let duration: CGFloat // in minutes
+    let duration: TimeInterval // Use TimeInterval for consistency
 }
 
-enum SegmentType {
-    case fokus, drowsy, distraksi
+enum SegmentType: String { // Make it RawRepresentable for easier mapping
+    case fokus, drowsy, distraksi, noFace, onBreak
 
     var color: Color {
         switch self {
-        case .fokus: return .blue
-        case .drowsy: return .orange
-        case .distraksi: return .red
+        case .fokus: return .green
+        case .drowsy: return .yellow
+        case .distraksi: return .blue
+        case .noFace: return .red
+        case .onBreak: return .purple
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .fokus: return "Fokus"
+        case .drowsy: return "Drowsy"
+        case .distraksi: return "Distraksi"
+        case .noFace: return "No Face"
+        case .onBreak: return "On Break"
         }
     }
 }
 
 struct TimelineBarView: View {
-    let segments: [TimelineSegment] = [
-        .init(type: .fokus, duration: 25),
-        .init(type: .distraksi, duration: 5),
-        .init(type: .fokus, duration: 15),
-        .init(type: .drowsy, duration: 10),
-        .init(type: .fokus, duration: 15),
-        .init(type: .fokus, duration: 30),
-        .init(type: .fokus, duration: 15),
-        .init(type: .distraksi, duration: 5),
-        .init(type: .fokus, duration: 30),
-    ]
+    let session: CompletedSession // Add this property
 
-    let totalDuration: CGFloat = 210
-    let startTime = "13.05"
-    let endTime = "16.35"
+    private var segments: [TimelineSegment] {
+        // Map DrowsinessState to SegmentType
+        session.events.map { event in
+            let segmentType: SegmentType
+            switch event.state {
+            case .awake:
+                segmentType = .fokus
+            case .eyesClosed, .yawning, .headDown:
+                segmentType = .drowsy
+            case .distracted:
+                segmentType = .distraksi
+            case .noFaceDetected, .error:
+                segmentType = .noFace
+            case .onBreak:
+                segmentType = .onBreak
+            }
+            return TimelineSegment(type: segmentType, duration: event.duration)
+        }
+    }
+
+    private var totalDuration: TimeInterval {
+        session.duration
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH.mm"
+        return formatter
+    }()
+
+    private var startTime: String {
+        TimelineBarView.timeFormatter.string(from: session.startTime)
+    }
+
+    private var endTime: String {
+        TimelineBarView.timeFormatter.string(from: session.endTime)
+    }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -59,7 +95,7 @@ struct TimelineBarView: View {
                                 let width = fullWidth * (segment.duration / totalDuration)
                                 Rectangle()
                                     .fill(segment.type.color)
-                                    .frame(width: width, height: 40)
+                                    .frame(width: max(0, width), height: 40) // Ensure width is not negative
                             }
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 6))

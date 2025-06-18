@@ -126,8 +126,3 @@ struct AlertModeView: View {
     }
 }
 
-#Preview {
-    AlertModeView()
-        .environmentObject(AppCoordinator())
-        .frame(width: 800, height: 600)
-}

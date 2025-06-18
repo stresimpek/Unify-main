@@ -32,11 +32,20 @@ struct focusAppApp: App {
                     .environmentObject(statsManager)
 
             case .summary:
-                SummaryView()
-                    .environmentObject(coordinator)
-                    // MARK: - FIX 4: Inject StatsManager into SummaryView
-                    // The summary view will definitely need this to display the data.
-                    .environmentObject(statsManager)
+                // Ensure you have access to the last completed session here.
+                // This is an example, you'll need to adapt it to how your app stores this.
+                if let lastSession = statsManager.lastCompletedSession { // <--- Get the session here
+                    SummaryView(session: lastSession) // <--- Pass the session
+                        .environmentObject(coordinator)
+                        .environmentObject(statsManager)
+                } else {
+                    // Handle the case where there's no last completed session,
+                    // perhaps show an error or navigate back to home.
+                    Text("No session data available.")
+                        .environmentObject(coordinator)
+                        .environmentObject(statsManager)
+                        
+                }
 
             case .history:
                 HistoryView()

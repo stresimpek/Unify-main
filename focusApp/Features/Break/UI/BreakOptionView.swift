@@ -2,7 +2,8 @@ import SwiftUI
 
 struct BreakOptionView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var coordinator: AppCoordinator // ⬅️ Tambah ini
+    @EnvironmentObject var coordinator: AppCoordinator
+    @EnvironmentObject var statsManager: StatsManager // <<< Add this
     @State private var navigateToBreakCountdown = false
     @State private var selectedBreakDuration: TimeInterval = 0
 
@@ -29,10 +30,14 @@ struct BreakOptionView: View {
                         .padding(.horizontal, 40)
 
                     HStack(spacing: 20) {
-                        ForEach([5, 10, 15], id: \.self) { minute in
+                        ForEach([0.5, 10, 15], id: \.self) { minute in
                             Button(action: {
                                 print("\(minute) Menit Break dipilih")
                                 selectedBreakDuration = TimeInterval(minute * 60)
+                                
+                                // <<< CALL START BREAK HERE, when a duration is chosen and the timer is about to begin
+                                statsManager.startBreak()
+
                                 navigateToBreakCountdown = true
                             }) {
                                 Text("\(minute) Menit")
@@ -53,6 +58,10 @@ struct BreakOptionView: View {
                     Button(action: {
                         print("Tombol Cancel diklik di BreakOptionView")
                         dismiss()
+                        // If cancelling here means returning to a non-break state immediately
+                        // and not starting a break, no statsManager.endBreak() is needed.
+                        // However, if a break was *already started* (e.g., if this view is presented mid-break),
+                        // you might need to handle that. Based on your flow, the break starts *after* selection.
                     }) {
                         Text("Cancel")
                             .font(.headline)
@@ -70,7 +79,8 @@ struct BreakOptionView: View {
             }
             .navigationDestination(isPresented: $navigateToBreakCountdown) {
                 BreakCountdownView(duration: selectedBreakDuration)
-                    .environmentObject(coordinator) // ⬅️ Inject ke BreakCountdownView
+                    .environmentObject(coordinator)
+                    .environmentObject(statsManager) // <<< Ensure statsManager is passed here
                     .onDisappear {
                         navigateToBreakCountdown = false
                     }
@@ -82,13 +92,5 @@ struct BreakOptionView: View {
                 ToolbarItem(placement: .principal) { EmptyView() }
             }
         }
-    }
-}
-
-struct BreakOptionView_Previews: PreviewProvider {
-    static var previews: some View {
-        BreakOptionView()
-            .frame(width: 1000, height: 700)
-            .environmentObject(AppCoordinator()) // ⬅️ Inject di preview juga
     }
 }

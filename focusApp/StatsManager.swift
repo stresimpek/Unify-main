@@ -2,13 +2,14 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 // NOTE: The `StateEvent` struct has been moved to Models/CodableModels.swift
 
 enum StatCategory: String, CaseIterable {
     case focus = "Focus"
     case drowsy = "Drowsy"
-    case distracted = "Distracted (Look Away)"
+    case distracted = "Distracted"
     case phoneDistracted = "Phone Use"
     case noFace = "No Face"
     case onBreak = "On Break"
@@ -44,6 +45,7 @@ enum TimePeriod: String, CaseIterable, Identifiable {
 
 @MainActor
 class StatsManager: ObservableObject {
+    @Published var lastCompletedSession: CompletedSession?
     @Published private(set) var events: [StateEvent] = []
     @Published private(set) var isRecording = false
     @Published private(set) var isOnBreak = false
@@ -89,6 +91,7 @@ class StatsManager: ObservableObject {
             events: self.events
         )
         
+        lastCompletedSession = completedSession
         HistoryStorage.shared.save(session: completedSession)
         
         events.removeAll()

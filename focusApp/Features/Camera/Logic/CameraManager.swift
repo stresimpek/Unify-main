@@ -370,8 +370,7 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
                 
             case .eyesClosed, .yawning, .headDown:
                 // Jika mengantuk, mulai istirahat dan tampilkan overlay.
-                print("🚨 Popup triggered. Starting break.")
-                self.statsManager?.startBreak() // ⬅️ TAMBAHKAN INI
+                print("🚨 Popup triggered. Starting break.")// ⬅️ TAMBAHKAN INI
                 self.coordinator?.showLostOverlay()
                 
             default:

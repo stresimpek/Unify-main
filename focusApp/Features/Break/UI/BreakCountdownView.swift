@@ -1,8 +1,10 @@
 import SwiftUI
+import Combine
 
 struct BreakCountdownView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var coordinator: AppCoordinator // ⬅️ Tambah ini
+    @EnvironmentObject var coordinator: AppCoordinator
+    @EnvironmentObject var statsManager: StatsManager // <<< Add this
     @StateObject private var countdownTimer: BreakCountdownTimer
 
     init(duration: TimeInterval) {
@@ -42,9 +44,9 @@ struct BreakCountdownView: View {
 
                     Button("Stop break") {
                         countdownTimer.stop()
-                        dismiss()
-                        coordinator.currentView = .alertMode
-                        coordinator.closeLostOverlay()
+                        // <<< CALL END BREAK HERE WHEN USER MANUALLY STOPS
+                        statsManager.endBreak()
+                        returnToMainState() // This function handles dismissal and state change
                     }
                     .font(.title2.bold())
                     .foregroundColor(.white)
@@ -65,11 +67,13 @@ struct BreakCountdownView: View {
             }
         }
         .onAppear {
-            SoundPlayer.shared.playSystemSound(named: "Pop") // 🔊 Suara saat mulai
+            SoundPlayer.shared.playSystemSound(named: "Pop")
             countdownTimer.onFinish = {
-                SoundPlayer.shared.playSystemSound(named: "Submarine") // 🔔 Suara saat selesai
+                SoundPlayer.shared.playSystemSound(named: "Submarine")
                 print("Break selesai!")
-                returnToMainState()
+                // <<< CALL END BREAK HERE WHEN TIMER FINISHES
+                statsManager.endBreak()
+                returnToMainState() // This function handles dismissal and state change
             }
             countdownTimer.start()
         }
@@ -85,15 +89,10 @@ struct BreakCountdownView: View {
     }
 
     func returnToMainState() {
-        coordinator.currentView = .alertMode // ⬅️ Ganti tampilan via state
-        coordinator.closeLostOverlay()
+        // Ensure this sequence of actions: dismiss the view, then update coordinator state
+        dismiss()
+        coordinator.currentView = .alertMode // Or whatever the appropriate "focus" state is
+        coordinator.closeLostOverlay() // Close the overarching overlay
     }
 }
 
-struct BreakCountdownView_Previews: PreviewProvider {
-    static var previews: some View {
-        BreakCountdownView(duration: 5 * 60)
-            .frame(width: 1000, height: 700)
-            .environmentObject(AppCoordinator()) // ⬅️ Inject preview juga
-    }
-}

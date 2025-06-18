@@ -5,7 +5,7 @@ class FocusLostWindowController {
     var window: NSWindow?
     var coordinator: AppCoordinator
     var onDismiss: () -> Void
-    var onBreak: () -> Void
+    var onBreak: () -> Void // This seems to be the action for "break"
 
     init(coordinator: AppCoordinator, onDismiss: @escaping () -> Void, onBreak: @escaping () -> Void) {
         self.coordinator = coordinator
@@ -16,11 +16,12 @@ class FocusLostWindowController {
     func show() {
         DispatchQueue.main.async {
             let contentView = NSHostingView(rootView:
-                FocusLostViewWrapper {
-                    // Saat dismiss (misal tombol kembali fokus)
+                FocusLostViewWrapper(onDismiss: {
                     self.onDismiss()
-                }
+                })
                 .environmentObject(self.coordinator)
+                // Now directly inject, as it's no longer optional
+                .environmentObject(self.coordinator.statsManager) // Inject StatsManager into the environment
             )
 
             let screenSize = NSScreen.main?.frame.size ?? CGSize(width: 800, height: 600)
@@ -48,4 +49,3 @@ class FocusLostWindowController {
         }
     }
 }
-

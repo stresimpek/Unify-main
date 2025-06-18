@@ -18,7 +18,7 @@ struct HistoryView: View {
         VStack(alignment: .leading, spacing: 16) {
             // MARK: - Header and Back Button
             HStack {
-                 Button(action: {
+                Button(action: {
                     coordinator.currentView = .home
                 }) {
                     HStack {
@@ -94,13 +94,16 @@ struct HistoryView: View {
         }
     }
     
-    // ... (formatDuration helper remains the same) ...
+    // --- The `formatDuration` helper here is part of `HistoryView` but seems unused directly by `HistoryRowView`.
+    // --- `HistoryRowView` has its own formatter. I'll modify `HistoryRowView` directly.
+    /*
     private func formatDuration(_ duration: TimeInterval) -> String {
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.hour, .minute, .second]
         formatter.unitsStyle = .abbreviated
         return formatter.string(from: duration) ?? "0s"
     }
+    */
 
     /// Loads and processes session data from storage.
     private func loadHistory() {
@@ -154,13 +157,31 @@ struct HistoryRowView: View {
         return formatter
     }()
     
-    // Formatter for the duration string
+    // Formatter for the duration string - MODIFIED
     private static let durationFormatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.hour, .minute]
-        formatter.unitsStyle = .full
+        formatter.allowedUnits = [.hour, .minute, .second] // Now includes seconds
+        formatter.unitsStyle = .full // Use full style (e.g., "1 hour 30 minutes 5 seconds")
+        formatter.zeroFormattingBehavior = .dropAll // Drop zero components like "0 hours"
         return formatter
     }()
+
+    // Helper function to handle special formatting for durations (e.g., "0 minutes" to "X seconds")
+    private func formattedDuration(from duration: TimeInterval) -> String {
+        if duration < 60 && duration > 0 {
+            // For durations less than 1 minute (but not zero), show only seconds
+            let secondsFormatter = DateComponentsFormatter()
+            secondsFormatter.allowedUnits = [.second]
+            secondsFormatter.unitsStyle = .full
+            secondsFormatter.zeroFormattingBehavior = .dropTrailing // Ensure "0 seconds" doesn't become empty if only seconds are allowed
+            return secondsFormatter.string(from: duration) ?? "\(Int(duration)) seconds" // Fallback to raw seconds
+        } else if duration == 0 {
+            return "0 seconds" // Explicitly show "0 seconds" for genuinely zero duration
+        } else {
+            // For 1 minute or more, use the standard durationFormatter
+            return Self.durationFormatter.string(from: duration) ?? "N/A"
+        }
+    }
 
     var body: some View {
         HStack {
@@ -168,7 +189,8 @@ struct HistoryRowView: View {
                 Text("Session at \(Self.timeFormatter.string(from: session.startTime))")
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
-                Text(Self.durationFormatter.string(from: session.duration) ?? "")
+                // Use the new helper function here
+                Text(formattedDuration(from: session.duration))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }

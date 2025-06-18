@@ -88,12 +88,3 @@ struct QuietModeView: View {
         }
     }
 }
-
-#Preview {
-    let statsManager = StatsManager()
-    
-    return QuietModeView()
-        .environmentObject(AppCoordinator())
-        .environmentObject(statsManager)
-        .frame(width: 800, height: 600)
-}
