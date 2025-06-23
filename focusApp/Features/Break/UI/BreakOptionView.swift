@@ -10,45 +10,44 @@ struct BreakOptionView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color("yellow-break")
+                Color("yellow-lost")
                     .ignoresSafeArea()
 
-                VStack(spacing: 30) {
+                VStack(spacing: 20) {
                     Spacer()
 
-                    Text("💤 Mau break berapa lama?")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                    Text("⏰ Pick your break time")
+                        .font(.system(size: 55, weight: .medium))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
-                        .padding(.bottom, 10)
 
-                    Text("Kamu bisa pilih break 5, 10, atau 15 menit. Ambil waktu yang pas biar bisa balik kerja dengan lebih segar.")
-                        .font(.title3)
-                        .foregroundColor(.white.opacity(0.9))
+                    Text("Choose how long, then get back with a clear mind")
+                        .font(.system(size: 28, weight: .regular))
+                        .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
-
+                    
                     HStack(spacing: 20) {
-                        ForEach([0.5, 10, 15], id: \.self) { minute in
+                        ForEach([5, 10, 15], id: \.self) { minute in
                             Button(action: {
                                 print("\(minute) Menit Break dipilih")
-                                selectedBreakDuration = TimeInterval(minute * 60)
+                                selectedBreakDuration = TimeInterval(60)
                                 
                                 // <<< CALL START BREAK HERE, when a duration is chosen and the timer is about to begin
                                 statsManager.startBreak()
 
                                 navigateToBreakCountdown = true
                             }) {
-                                Text("\(minute) Menit")
+                                Text("\(minute) Minutes")
                                     .font(.title2)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.white)
-                                    .padding(.vertical, 15)
-                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 30)
+                                    .padding(.horizontal, 60)
                                     .background(Color("brownButtonA"))
-                                    .cornerRadius(10)
+                                    .cornerRadius(15)
                                     .shadow(radius: 5)
+                                    .padding(.top, 60)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -63,13 +62,13 @@ struct BreakOptionView: View {
                         // However, if a break was *already started* (e.g., if this view is presented mid-break),
                         // you might need to handle that. Based on your flow, the break starts *after* selection.
                     }) {
-                        Text("Cancel")
+                        Text("Back to focus")
                             .font(.headline)
                             .foregroundColor(.white)
                             .padding(.vertical, 10)
                             .padding(.horizontal, 25)
                             .background(Color("brownButtonC"))
-                            .cornerRadius(10)
+                            .cornerRadius(25)
                     }
                     .buttonStyle(PlainButtonStyle())
 

@@ -15,14 +15,14 @@ struct FocusLostButtons: View {
                 // 3. Call the statsManager method
 //                statsManager.startBreak()
             }) {
-                Text("break")
+                Text("Break")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
-                    .padding(.vertical, 15)
-                    .padding(.horizontal, 30)
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 70)
                     .background(Color("brownButtonB"))
-                    .cornerRadius(10)
+                    .cornerRadius(45)
                     .shadow(radius: 5)
             }
             .buttonStyle(PlainButtonStyle())
@@ -31,14 +31,14 @@ struct FocusLostButtons: View {
                 // 4. Call the passed-in action
                 onFocusTapped()
             }) {
-                Text("Kembali fokus")
+                Text("Back to focus")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
-                    .padding(.vertical, 15)
-                    .padding(.horizontal, 30)
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 70)
                     .background(Color("brownButtonA"))
-                    .cornerRadius(10)
+                    .cornerRadius(45)
                     .shadow(radius: 5)
             }
             .buttonStyle(PlainButtonStyle())

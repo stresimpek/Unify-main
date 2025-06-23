@@ -35,27 +35,29 @@ struct BreakCountdownView: View {
                     .cornerRadius(20)
                     .padding(.bottom, 20)
 
-                    Text("Take a moment to rest and recharge before returning to work.")
-                        .font(.title3)
+                    Text("Tips: A quick stretch can help you focus again😉")
+                        .font(.title)
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                         .padding(.bottom, 40)
 
-                    Button("Stop break") {
+                    Button(action: {
                         countdownTimer.stop()
-                        // <<< CALL END BREAK HERE WHEN USER MANUALLY STOPS
                         statsManager.endBreak()
-                        returnToMainState() // This function handles dismissal and state change
+                        returnToMainState()
+                    }) {
+                        Text("Stop break")
+                            .font(.title2.bold())
+                            .foregroundColor(.white)
+                            .padding(.vertical, 15)
+                            .padding(.horizontal, 30)
+                            .background(Color("stopBreak"))
+                            .cornerRadius(25)
                     }
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
-                    .padding(.vertical, 15)
-                    .padding(.horizontal, 30)
-                    .background(Color("stopBreak"))
-                    .cornerRadius(10)
+                    .buttonStyle(PlainButtonStyle())
                     .shadow(radius: 5)
-
+                
                     Spacer()
                 }
                 .padding(30)
@@ -96,3 +98,8 @@ struct BreakCountdownView: View {
     }
 }
 
+#Preview {
+    BreakCountdownView(duration: 100)
+        .frame(width: 1400, height: 800)
+        .environmentObject(AppCoordinator())
+}

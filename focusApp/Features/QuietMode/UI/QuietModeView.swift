@@ -14,8 +14,12 @@ struct QuietModeView: View {
                     coordinator.currentView = .home
                 }) {
                     Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.gray)
+                        .font(.caption2)
+                        .foregroundColor(Color("chevronLeft"))
+                        .frame(width: 20, height: 20)
+                        .background(Color("backChevronLeft"))
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 }
                 .buttonStyle(PlainButtonStyle())
                 Spacer()
@@ -57,7 +61,7 @@ struct QuietModeView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .frame(width: 250, height: 50)
-                    .background(Color.green)
+                    .background(Color("startQuietMode"))
                     .cornerRadius(25)
                     .shadow(radius: 5)
             }

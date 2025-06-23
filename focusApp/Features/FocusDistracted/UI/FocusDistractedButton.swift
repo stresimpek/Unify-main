@@ -8,13 +8,13 @@ struct FocusDistractedButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.title2)
+                .font(.title)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
-                .padding(.vertical, 15)
-                .padding(.horizontal, 30)
+                .padding(.vertical, 20)
+                .padding(.horizontal, 90)
                 .background(Color(colorName))
-                .cornerRadius(10)
+                .cornerRadius(45)
                 .shadow(radius: 5)
         }
         .buttonStyle(PlainButtonStyle())

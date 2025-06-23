@@ -15,8 +15,12 @@ struct AlertModeView: View {
                         coordinator.currentView = .home
                     }) {
                         Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.gray)
+                            .font(.caption2)
+                            .foregroundColor(Color("chevronLeft"))
+                            .frame(width: 20, height: 20)
+                            .background(Color("backChevronLeft"))
+                            .cornerRadius(12)
+                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                     }
                     .buttonStyle(PlainButtonStyle())
                     Spacer()
@@ -30,7 +34,7 @@ struct AlertModeView: View {
                 CameraView()
                     // Injects the cameraManager from the parent view
                     .environmentObject(cameraManager)
-                    .frame(minWidth: 640, minHeight:360)
+//                    .frame(minWidth: 640, minHeight: 360)
                     
                     // This is the key change:
                     // It forces the view into a 16:9 aspect ratio.
@@ -49,8 +53,6 @@ struct AlertModeView: View {
                             .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                     )
                     .clipped()
-
-
 
                 Spacer()
 
@@ -71,7 +73,7 @@ struct AlertModeView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(width: 250, height: 50)
-                        .background(Color.blue)
+                        .background(Color("startAlertMode"))
                         .cornerRadius(25)
                         .shadow(radius: 5)
                 }
@@ -80,30 +82,31 @@ struct AlertModeView: View {
                 Spacer()
             }
             .padding(30)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.white)
 
-            // ==== DEBUG FLOATING TOOLS ====
-            #if DEBUG
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 8) {
-                        Button("🔴 Trigger Lost") {
-                            coordinator.showLostOverlay()
-                        }
-                        Button("🟠 Trigger Distracted") {
-                            coordinator.showDistractedOverlay()
-                        }
-                    }
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(12)
-                    .shadow(radius: 4)
-                    .padding()
-                }
-            }
-            #endif
+//            // ==== DEBUG FLOATING TOOLS ====
+//            #if DEBUG
+//            VStack {
+//                Spacer()
+//                HStack {
+//                    Spacer()
+//                    VStack(alignment: .trailing, spacing: 8) {
+//                        Button("🔴 Trigger Lost") {
+//                            coordinator.showLostOverlay()
+//                        }
+//                        Button("🟠 Trigger Distracted") {
+//                            coordinator.showDistractedOverlay()
+//                        }
+//                    }
+//                    .padding()
+//                    .background(.ultraThinMaterial)
+//                    .cornerRadius(12)
+//                    .shadow(radius: 4)
+//                    .padding()
+//                }
+//            }
+//            #endif
         }
         .onAppear {
             cameraManager.setStatsManager(statsManager)
@@ -126,3 +129,6 @@ struct AlertModeView: View {
     }
 }
 
+//#Preview {
+//    AlertModeView()
+//}

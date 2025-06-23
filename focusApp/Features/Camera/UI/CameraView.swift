@@ -265,3 +265,7 @@ struct LandmarksView: View {
         return VNImageRectForNormalizedRect(flippedRect, Int(viewSize.width), Int(viewSize.height))
     }
 }
+
+//#Preview{
+//    CameraView()
+//}

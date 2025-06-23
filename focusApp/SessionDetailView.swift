@@ -46,15 +46,15 @@ struct SessionDetailView: View {
     private let displayCategories: [StatCategory] = [.focus, .drowsy, .distracted, .onBreak]
 
     // Computed property to determine the appropriate "Great Work" message
-    private var greatWorkMessage: (text: String, emoji: String) {
+    private var greatWorkMessage: String {
         if focusPercentage >= 75 {
-            return ("You Nailed It", "🤩")
+            return ("You Nailed It!")
         } else if focusPercentage >= 50 {
-            return ("Pretty Good", "😆")
+            return ("Pretty Good!")
         } else if focusPercentage >= 25 {
-            return ("You Can Do Better", "😉")
+            return ("You Can Do Better!")
         } else {
-            return ("Focus is Off", "😵") // Default for lower focus or if no focus recorded
+            return ("Focus is Off") // Default for lower focus or if no focus recorded
         }
     }
 
@@ -75,25 +75,56 @@ struct SessionDetailView: View {
                         dismiss() // Dismiss the sheet/modal
                     }) {
                         Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.gray)
+                            .font(.caption2)
+                            .foregroundColor(Color("chevronLeft"))
+                            .frame(width: 20, height: 20)
+                            .background(Color("backChevronLeft"))
+                            .cornerRadius(12)
+                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                     }
                     .buttonStyle(PlainButtonStyle())
-
                     Spacer()
                 }
                 .padding(.horizontal)
                 .padding(.top, 20)
 
-                Spacer() // Pushes content towards the center/bottom
+//                Spacer() // Pushes content towards the center/bottom
+                
+                // NEW: Trophy Image (conditional)
+                // This image will only appear for the best performance.
+                if focusPercentage >= 75 {
+                    Image("1happy")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 180)
+                        .padding(.bottom, 0) // Adds some space between the image and the text
+                } else if focusPercentage >= 50 {
+                    Image("2happyaja")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 180)
+                        .padding(.bottom, 0) // Adds some space between the image and the text
+                } else if focusPercentage >= 25 {
+                    Image("3normal")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 180)
+                        .padding(.bottom, 0) // Adds some space between the image and the text
+                } else {
+                    Image("4sad")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 180)
+                        .padding(.bottom, 0) // Adds some space between the image and the text
+                }
 
                 // MARK: - Title and Subtitle (from SummaryView)
-                VStack(spacing: 8) {
-                    Text("\(greatWorkMessage.text) \(greatWorkMessage.emoji)")
+                VStack(spacing: 10) {
+                    Text(greatWorkMessage)
                         .font(.system(size: 34, weight: .bold))
                         .foregroundColor(.black)
 
-                    Text("Kamu telah bekerja selama **\(Self.durationFormatter.string(from: session.duration) ?? "N/A")**.")
+                    Text("You have worked for **\(Self.durationFormatter.string(from: session.duration) ?? "N/A")**.")
                         .font(.title3)
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
@@ -110,42 +141,68 @@ struct SessionDetailView: View {
                                 percentage: Int(percentage * 100),
                                 color: category.color,
                                 title: category.rawValue,
-                                duration: Self.durationFormatter.string(from: duration) ?? "0 menit"
+                                duration: Self.durationFormatter.string(from: duration) ?? "0 minute"
                             )
                         }
                     }
                 }
                 .padding(.top)
 
-                Spacer() // Pushes content towards the center/top
+//                Spacer() // Pushes content towards the center/top
 
                 // MARK: - Timeline Bar (from TimelineBarView)
                 TimelineBarView(session: session)
-                    .frame(height: 170) // Use the full height of TimelineBarView
+                    .frame(height: 160) // Use the full height of TimelineBarView
+                    .cornerRadius(25)
             }
-            .padding(30)
+            .padding(20)
         }
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigation) { EmptyView() }
         }
+//        .onAppear {
+//            // Calculate durations and focus percentage when the view appears (from SummaryView)
+//            categoryDurations = session.calculateCategoryDurations()
+//            
+//            var calculatedTotalConsideredDuration: TimeInterval = 0
+//            for category in displayCategories {
+//                calculatedTotalConsideredDuration += categoryDurations[category] ?? 0
+//            }
+//            self.totalConsideredDuration = calculatedTotalConsideredDuration
+//
+//            let focusDuration = categoryDurations[.focus] ?? 0
+//            if totalConsideredDuration > 0 {
+//                self.focusPercentage = Int((focusDuration / totalConsideredDuration) * 100)
+//            } else {
+//                self.focusPercentage = 0
+//            }
+//        }
         .onAppear {
-            // Calculate durations and focus percentage when the view appears (from SummaryView)
-            categoryDurations = session.calculateCategoryDurations()
-            
-            var calculatedTotalConsideredDuration: TimeInterval = 0
-            for category in displayCategories {
-                calculatedTotalConsideredDuration += categoryDurations[category] ?? 0
-            }
-            self.totalConsideredDuration = calculatedTotalConsideredDuration
+                    
+                    let rawDurations = session.calculateCategoryDurations()
+                    
+                    let calculatedTotal = StatCategory.allCases.reduce(0) {
+                        $0 + (rawDurations[$1] ?? 0)
+                    }
+                    self.totalConsideredDuration = calculatedTotal
 
-            let focusDuration = categoryDurations[.focus] ?? 0
-            if totalConsideredDuration > 0 {
-                self.focusPercentage = Int((focusDuration / totalConsideredDuration) * 100)
-            } else {
-                self.focusPercentage = 0
-            }
-        }
+                    var modifiedDurations = rawDurations
+                    let phoneDuration = modifiedDurations[.phoneDistracted] ?? 0
+                    if phoneDuration > 0 {
+                        modifiedDurations[.distracted, default: 0] += phoneDuration
+                    }
+                    
+                    self.categoryDurations = modifiedDurations
+
+                    let focusDuration = self.categoryDurations[.focus] ?? 0
+                    if self.totalConsideredDuration > 0 {
+                        self.focusPercentage = Int((focusDuration / self.totalConsideredDuration) * 100)
+                    } else {
+                        self.focusPercentage = 0
+                    }
+                }
+
     }
 }

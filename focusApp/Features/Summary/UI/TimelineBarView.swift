@@ -81,7 +81,7 @@ struct TimelineBarView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Timeline")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.black)
+                    .foregroundColor(Color("textApp"))
                     .padding(.leading, 16)
                     .padding(.top, 16)
 
